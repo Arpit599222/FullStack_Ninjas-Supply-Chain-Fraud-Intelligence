@@ -63,7 +63,8 @@ export default function AiExplainerModal({ seller, onClose }) {
         setLoading(true);
         setError('');
         try {
-            const response = await fetch('http://localhost:8000/api/chatbot/', {
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+            const response = await fetch(`${baseUrl}/api/chatbot/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
