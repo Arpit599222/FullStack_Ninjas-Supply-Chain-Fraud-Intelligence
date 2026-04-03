@@ -123,5 +123,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 
+import os
+
 # Set fallback key so it doesn't crash, but ideally use env var
-GEMINI_API_KEY = "AIzaSyCW7hMB-dOCtkH0R3KV368OKYVLX3SfdkE"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', "")
