@@ -4,6 +4,8 @@
 
 ![Shield Logo](react-frontend/public/logo_main.jpg)
 
+deploy link (https://supply-chain-fraud-inte.vercel.app)
+
 ---
 
 ## 🎯 Project Overview
