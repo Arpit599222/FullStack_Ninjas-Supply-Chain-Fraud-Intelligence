@@ -1,31 +1,36 @@
-import React, { useState, useMemo } from 'react';
-import { ExportButtons, EmptyState, Pagination } from './shared';
+import React, { useState, useMemo, useRef } from 'react';
+import { ExportButtons, EmptyState, Pagination, RiskBadge, FraudFlag } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
 import { risk_df } from '../utils/mockData';
-
-
-const PAGE_SIZES = [25, 50, 100];
-
-function RiskBadge({ level }) {
-    const cls = level === 'HIGH' ? 'bg-red-900 text-red-300'
-        : level === 'MEDIUM' ? 'bg-yellow-900 text-yellow-300'
-        : 'bg-green-900 text-green-300';
-    return <span className={`px-2 py-1 rounded text-xs font-bold ${cls}`}>{level}</span>;
-}
 
 export default function RiskTable() {
     const [platform, setPlatform] = useState('All');
     const [riskLevel, setRiskLevel] = useState('All');
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
+    const [sortCol, setSortCol] = useState('RISK_SCORE');
+    const [sortAsc, setSortAsc] = useState(false);
+    const [showInvestigationModal, setShowInvestigationModal] = useState(false);
+
+    const handleInvestigation = () => {
+        setShowInvestigationModal(true);
+    };
 
     const filtered = useMemo(() => {
-        return (risk_df || []).filter(r => {
+        let data = (risk_df || []).filter(r => {
             if (platform !== 'All' && r.PLATFORM !== platform) return false;
             if (riskLevel !== 'All' && r.RISK_LEVEL !== riskLevel) return false;
             return true;
         });
-    }, [platform, riskLevel]);
+        data = [...data].sort((a, b) => {
+            const av = a[sortCol], bv = b[sortCol];
+            if (typeof av === 'number') return sortAsc ? av - bv : bv - av;
+            return sortAsc
+                ? String(av).localeCompare(String(bv))
+                : String(bv).localeCompare(String(av));
+        });
+        return data;
+    }, [platform, riskLevel, sortCol, sortAsc]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const safePage = Math.min(page, totalPages);
@@ -33,7 +38,8 @@ export default function RiskTable() {
 
     const handlePageSize = (s) => { setPageSize(s); setPage(1); };
     const handlePlatform = (v) => { setPlatform(v); setPage(1); };
-    const handleRisk = (v) => { setRiskLevel(v); setPage(1); };
+    const handleRisk     = (v) => { setRiskLevel(v); setPage(1); };
+    const toggleSort     = (col) => { setSortCol(col); setSortAsc(p => sortCol === col ? !p : false); };
 
     const exportData = filtered.map(r => ({
         Seller_Name: r.SELLER_NAME,
@@ -48,97 +54,156 @@ export default function RiskTable() {
         Fraud_Flag: r.FRAUD_FLAG,
     }));
 
-    return (
-        <div>
-            <h2 className="text-xl font-bold mb-4">Complete Seller Risk Table</h2>
+    const COLS = [
+        { key: 'SELLER_NAME', label: 'Seller Name' },
+        { key: 'PLATFORM',    label: 'Platform' },
+        { key: 'CITY',        label: 'City' },
+        { key: 'RISK_LEVEL',  label: 'Risk Level', noSort: true },
+        { key: 'RISK_SCORE',  label: 'Risk Score' },
+        { key: 'PAGERANK_SCORE', label: 'PageRank' },
+        { key: 'LOUVAIN_COMMUNITY', label: 'Community' },
+        { key: 'WCC_ENTITY',  label: 'WCC Entity' },
+        { key: 'RETURN_RATE', label: 'Return Rate' },
+        { key: 'FRAUD_FLAG',  label: 'Fraud Status', noSort: true },
+    ];
 
-            {/* Filters + Export */}
-            <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
-                <div className="flex gap-4 flex-wrap">
-                    <div className="flex flex-col w-52">
-                        <label className="text-xs text-gray-400 mb-1">Platform</label>
-                        <select value={platform} onChange={e => handlePlatform(e.target.value)}
-                            className="bg-[#1a1a2e] border border-gray-700 text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
-                            <option value="All">All</option>
+    return (
+        <div className="glass-card overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-[var(--border-subtle)]">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <select value={platform} onChange={e => handlePlatform(e.target.value)} className="premium-select w-full sm:w-48">
+                            <option value="All">All Platforms</option>
                             <option value="Amazon">Amazon</option>
                             <option value="Flipkart">Flipkart</option>
                         </select>
-                    </div>
-                    <div className="flex flex-col w-52">
-                        <label className="text-xs text-gray-400 mb-1">Risk Level</label>
-                        <select value={riskLevel} onChange={e => handleRisk(e.target.value)}
-                            className="bg-[#1a1a2e] border border-gray-700 text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 p-2">
-                            <option value="All">All</option>
-                            <option value="HIGH">HIGH</option>
-                            <option value="MEDIUM">MEDIUM</option>
-                            <option value="LOW">LOW</option>
+                        <select value={riskLevel} onChange={e => handleRisk(e.target.value)} className="premium-select w-full sm:w-48">
+                            <option value="All">All Risks</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
                         </select>
                     </div>
+                    <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                        <ExportButtons
+                            onCSV={() => downloadCSV(exportData, 'seller-risk-table')}
+                            onExcel={() => downloadExcel(exportData, 'seller-risk-table')}
+                            onPDF={() => downloadPDF(exportData, 'seller-risk-table')}
+                            disabled={filtered.length === 0}
+                        />
+                    </div>
                 </div>
-                <ExportButtons
-                    onCSV={() => downloadCSV(exportData, 'seller-risk-table')}
-                    onExcel={() => downloadExcel(exportData, 'seller-risk-table', 'Risk Table')}
-                    onPDF={() => downloadPDF(exportData, 'seller-risk-table', 'Seller Risk Table')}
-                    disabled={filtered.length === 0}
-                />
             </div>
 
-            <p className="mb-3 text-gray-300 text-sm">
-                Showing <span className="font-bold text-white">{filtered.length}</span> sellers
-                {filtered.length !== risk_df.length && <span className="text-gray-500"> (filtered from {risk_df.length})</span>}
-            </p>
-
-            <div className="bg-[#1a1a2e] border border-gray-800 rounded-lg overflow-hidden">
-                <div className="overflow-auto max-h-[460px]">
-                    {filtered.length === 0 ? (
-                        <EmptyState message="No sellers match the selected filters." />
-                    ) : (
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-[#242440] text-gray-300 sticky top-0 shadow z-10">
-                                <tr>
-                                    <th className="p-3 whitespace-nowrap">Seller Name</th>
-                                    <th className="p-3">Platform</th>
-                                    <th className="p-3">City</th>
-                                    <th className="p-3">Risk Level</th>
-                                    <th className="p-3">Risk Score</th>
-                                    <th className="p-3">PageRank</th>
-                                    <th className="p-3">Community</th>
-                                    <th className="p-3">WCC Entity</th>
-                                    <th className="p-3">Return Rate</th>
-                                    <th className="p-3">Fraud Flag</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pageRows.map((r, i) => (
-                                    <tr key={i} className="border-b border-gray-800 hover:bg-[#202035] transition-colors">
-                                        <td className="p-3 font-medium whitespace-nowrap">{r.SELLER_NAME}</td>
-                                        <td className="p-3">{r.PLATFORM}</td>
-                                        <td className="p-3">{r.CITY}</td>
-                                        <td className="p-3"><RiskBadge level={r.RISK_LEVEL} /></td>
-                                        <td className="p-3">{r.RISK_SCORE.toFixed(2)}</td>
-                                        <td className="p-3">{r.PAGERANK_SCORE.toFixed(4)}</td>
-                                        <td className="p-3">{r.LOUVAIN_COMMUNITY}</td>
-                                        <td className="p-3">{r.WCC_ENTITY}</td>
-                                        <td className="p-3">{r.RETURN_RATE.toFixed(4)}</td>
-                                        <td className="p-3">{r.FRAUD_FLAG === 1 ? '🔴 Yes' : '🟢 No'}</td>
-                                    </tr>
+            <div className="premium-table-container max-h-[400px] md:max-h-[500px] border-none rounded-none w-full overflow-x-auto">
+                {filtered.length === 0 ? (
+                    <EmptyState message="No sellers match the selected filters." />
+                ) : (
+                    <table className="premium-table min-w-[800px] w-full text-xs md:text-sm">
+                        <thead>
+                            <tr>
+                                {COLS.map(col => (
+                                    <th
+                                        key={col.key}
+                                        onClick={() => !col.noSort && toggleSort(col.key)}
+                                        style={{ cursor: col.noSort ? 'default' : 'pointer' }}
+                                    >
+                                        {col.label}
+                                        {!col.noSort && sortCol === col.key && (
+                                            <span style={{ marginLeft: 6, color: 'var(--text-primary)' }}>
+                                                {sortAsc ? '↑' : '↓'}
+                                            </span>
+                                        )}
+                                    </th>
                                 ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-                {filtered.length > 0 && (
-                    <Pagination
-                        page={safePage}
-                        totalPages={totalPages}
-                        onPrev={() => setPage(p => Math.max(1, p - 1))}
-                        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
-                        pageSize={pageSize}
-                        setPageSize={handlePageSize}
-                        totalRows={filtered.length}
-                    />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pageRows.map((r, i) => (
+                                <React.Fragment key={r.SELLER_NAME || i}>
+                                    <tr 
+                                        className="hover:bg-white/5 transition-colors"
+                                    >
+                                        <td style={{ fontWeight: 500 }}>
+                                            <div className="flex flex-col gap-1 items-start">
+                                                <span>{r.SELLER_NAME}</span>
+                                                {r.ADMIN_REASON && (
+                                                    <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded shadow-sm border border-blue-500/20">
+                                                        MODIFIED BY ADMIN
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>{r.PLATFORM}</td>
+                                        <td>{r.CITY}</td>
+                                        <td><RiskBadge level={r.RISK_LEVEL} /></td>
+                                        <td>{r.RISK_SCORE.toFixed(2)}</td>
+                                        <td>{r.PAGERANK_SCORE.toFixed(4)}</td>
+                                        <td>{r.LOUVAIN_COMMUNITY}</td>
+                                        <td>{r.WCC_ENTITY}</td>
+                                        <td>{r.RETURN_RATE.toFixed(4)}</td>
+                                        <td>
+                                            <FraudFlag isFraud={r.FRAUD_FLAG === 1} onInvestigate={handleInvestigation} />
+                                        </td>
+                                    </tr>
+                                    {r.ADMIN_REASON && (
+                                        <tr style={{ background: 'rgba(59, 130, 246, 0.05)' }}>
+                                            <td colSpan={10} style={{ padding: '8px 16px', borderTop: 'none', borderBottom: '1px solid var(--border-subtle)' }}>
+                                                <div className="text-xs text-blue-300 flex items-start gap-2">
+                                                    <span className="opacity-80 mt-0.5 font-semibold">Override Reason:</span>
+                                                    <span className="italic">{r.ADMIN_REASON}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
                 )}
             </div>
+
+            {filtered.length > 0 && (
+                <Pagination
+                    page={safePage}
+                    totalPages={totalPages}
+                    onPrev={() => setPage(p => Math.max(1, p - 1))}
+                    onNext={() => setPage(p => Math.min(totalPages, p + 1))}
+                    pageSize={pageSize}
+                    setPageSize={handlePageSize}
+                    totalRows={filtered.length}
+                />
+            )}
+
+            {showInvestigationModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setShowInvestigationModal(false)}>
+                    <div 
+                        className="relative w-full max-w-md bg-[var(--bg-deep)] rounded-xl shadow-[0_0_40px_rgba(59,130,246,0.15)] border border-[var(--border-subtle)] p-6 md:p-8 animate-in zoom-in-95 duration-300"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none"></div>
+                        
+                        <h3 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                            🚀 Investigation Module Coming Soon
+                        </h3>
+                        
+                        <p className="text-[var(--text-secondary)] text-sm md:text-base leading-relaxed mb-4">
+                            We are actively working on an advanced investigation system that will provide detailed fraud analysis, root cause insights, and intelligent recommendations.
+                        </p>
+                        
+                        <p className="text-blue-400 text-xs md:text-sm font-medium mb-8">
+                            Stay tuned — this feature will enhance decision-making and fraud control.
+                        </p>
+                        
+                        <button 
+                            onClick={() => setShowInvestigationModal(false)}
+                            className="w-full py-3 btn-primary text-[1.1em] mt-4"
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

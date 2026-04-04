@@ -1,10 +1,10 @@
 import React from 'react';
 import { usePlotly } from '../utils/usePlotly';
-import { ChartLoader, EmptyState, ExportButtons } from './shared';
+import { ChartLoader, EmptyState, ExportButtons, RiskBadge } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
 import { risk_df } from '../utils/mockData';
 
-const cmap = { HIGH: '#FF4444', MEDIUM: '#FFA500', LOW: '#44BB44' };
+const cmap = { HIGH: '#ef4444', MEDIUM: '#facc15', LOW: '#22c55e' };
 
 function ScatterPlot() {
     const data = ['HIGH', 'MEDIUM', 'LOW'].map(lvl => {
@@ -13,23 +13,55 @@ function ScatterPlot() {
             x: filtered.map(r => r.PAGERANK_SCORE),
             y: filtered.map(r => r.RISK_SCORE),
             mode: 'markers', type: 'scatter', name: lvl,
-            marker: { size: filtered.map(r => Math.max(5, r.RISK_SCORE / 5)), color: cmap[lvl] },
+            marker: { 
+                size: filtered.map(r => Math.max(5, r.RISK_SCORE / 5)), 
+                color: cmap[lvl],
+                line: { width: 0 }
+            },
             text: filtered.map(r => `${r.SELLER_NAME}<br>${r.CITY}<br>${r.PLATFORM}`),
             hoverinfo: 'text',
         };
     });
+    
+    // Updated Plotly theme configs to match minimal style
     const { ref, loading } = usePlotly(data, {
-        xaxis: { title: 'PageRank Score', zeroline: false },
-        yaxis: { title: 'Risk Score', zeroline: false },
-        height: 480, paper_bgcolor: 'white', plot_bgcolor: 'white',
-        hovermode: 'closest', margin: { t: 20, l: 55, r: 20, b: 55 },
-    }, { scrollZoom: true, filename: 'pagerank-vs-risk' });
+        xaxis: { 
+            title: 'PageRank Score', 
+            zeroline: false,
+            gridcolor: 'rgba(255,255,255,0.06)',
+            tickfont: { color: '#71717a' },
+            titlefont: { color: '#a1a1aa' }
+        },
+        yaxis: { 
+            title: 'Risk Score', 
+            zeroline: false,
+            gridcolor: 'rgba(255,255,255,0.06)',
+            tickfont: { color: '#71717a' },
+            titlefont: { color: '#a1a1aa' }
+        },
+        height: 480, 
+        paper_bgcolor: 'transparent', 
+        plot_bgcolor: 'transparent',
+        hovermode: 'closest', 
+        margin: { t: 20, l: 55, r: 20, b: 55 },
+        legend: { font: { color: '#a1a1aa' } },
+        hoverlabel: {
+            bgcolor: 'rgba(20,20,22,0.95)',
+            bordercolor: 'rgba(255,255,255,0.1)',
+            font: { family: "Inter, system-ui, sans-serif", color: '#f4f4f5', size: 12 },
+        },
+    }, { scrollZoom: true, filename: 'pagerank-vs-risk', displayModeBar: false });
 
     return (
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <h3 className="text-gray-800 font-bold mb-2 text-sm">PageRank Centrality vs Fraud Risk Score</h3>
-            <div className="relative" style={{ height: '480px' }}>
-                {loading && <div className="absolute inset-0 z-10 bg-white flex items-center justify-center"><ChartLoader /></div>}
+        <div className="glass-card" style={{ padding: '20px' }}>
+            <h3 style={{
+                margin: '0 0 16px 0', fontSize: '0.85rem', fontWeight: 600,
+                color: 'var(--text-primary)', letterSpacing: '0.02em',
+            }}>
+                PageRank Centrality vs Fraud Risk Score
+            </h3>
+            <div style={{ position: 'relative', height: '480px' }}>
+                {loading && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChartLoader /></div>}
                 <div ref={ref} style={{ width: '100%', height: '100%' }} />
             </div>
         </div>
@@ -54,15 +86,22 @@ export default function PageRankGraph() {
 
     return (
         <div>
-            <h2 className="text-xl font-bold mb-1">PageRank vs Risk Score</h2>
-            <p className="text-sm text-gray-400 mb-4">
-                High PageRank + High Risk = most dangerous influential seller
-                &nbsp;·&nbsp;<span className="text-blue-400">Scroll to zoom</span>
-            </p>
-            <div className="mb-6"><ScatterPlot /></div>
+            <div style={{ marginBottom: 24 }}>
+                <h2 style={{
+                    margin: '0 0 4px 0', fontSize: '1.25rem', fontWeight: 600,
+                    color: 'var(--text-primary)',
+                }}>
+                    PageRank vs Risk Score
+                </h2>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Influential sellers identified using graph-based centrality. High PageRank + High Risk = Most dangerous target.
+                </p>
+            </div>
+            
+            <div style={{ marginBottom: 32 }}><ScatterPlot /></div>
 
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                <h3 className="font-bold">Top 10 Sellers by PageRank</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 500, color: 'var(--text-primary)' }}>Top 10 Sellers by PageRank</h3>
                 <ExportButtons
                     onCSV={() => downloadCSV(exportData, 'top10-sellers-pagerank')}
                     onExcel={() => downloadExcel(exportData, 'top10-sellers-pagerank', 'Top Sellers')}
@@ -70,29 +109,29 @@ export default function PageRankGraph() {
                 />
             </div>
 
-            <div className="overflow-auto bg-[#1a1a2e] border border-gray-800 rounded-lg">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-[#242440] text-gray-300 sticky top-0">
+            <div className="premium-table-container">
+                <table className="premium-table">
+                    <thead>
                         <tr>
-                            <th className="p-3">Seller Name</th><th className="p-3">Platform</th>
-                            <th className="p-3">City</th><th className="p-3">PageRank</th>
-                            <th className="p-3">Risk Level</th><th className="p-3">Risk Score</th>
+                            <th>Seller Name</th>
+                            <th>Platform</th>
+                            <th>City</th>
+                            <th>PageRank</th>
+                            <th>Risk Level</th>
+                            <th>Risk Score</th>
                         </tr>
                     </thead>
                     <tbody>
                         {topSellers.map((s, i) => (
-                            <tr key={i} className="border-b border-gray-800 hover:bg-[#202035]">
-                                <td className="p-3 font-medium">{s.SELLER_NAME}</td>
-                                <td className="p-3">{s.PLATFORM}</td>
-                                <td className="p-3">{s.CITY}</td>
-                                <td className="p-3">{s.PAGERANK_SCORE.toFixed(4)}</td>
-                                <td className="p-3">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                        s.RISK_LEVEL === 'HIGH' ? 'bg-red-900 text-red-300' :
-                                        s.RISK_LEVEL === 'MEDIUM' ? 'bg-yellow-900 text-yellow-300' : 'bg-green-900 text-green-300'
-                                    }`}>{s.RISK_LEVEL}</span>
+                            <tr key={i}>
+                                <td style={{ fontWeight: 500 }}>{s.SELLER_NAME}</td>
+                                <td>{s.PLATFORM}</td>
+                                <td>{s.CITY}</td>
+                                <td>{s.PAGERANK_SCORE.toFixed(4)}</td>
+                                <td>
+                                    <RiskBadge level={s.RISK_LEVEL} />
                                 </td>
-                                <td className="p-3">{s.RISK_SCORE.toFixed(1)}</td>
+                                <td>{s.RISK_SCORE.toFixed(1)}</td>
                             </tr>
                         ))}
                     </tbody>

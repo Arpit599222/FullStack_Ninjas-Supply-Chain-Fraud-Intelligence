@@ -29,13 +29,43 @@ export function usePlotly(data, layout, config = {}) {
 
         const defaultLayout = {
             dragmode: 'pan',
+            autosize: true,
             ...layout,
         };
 
+        let resizeObserver;
+
         Plotly.newPlot(ref.current, data, defaultLayout, defaultConfig)
-            .then(() => setLoading(false));
+            .then(() => {
+                setLoading(false);
+                // Force a resize after small delays to guarantee it fits the container 
+                // after CSS animations or tab switching have settled
+                setTimeout(() => { if (ref.current) Plotly.Plots.resize(ref.current); }, 150);
+                setTimeout(() => { if (ref.current) Plotly.Plots.resize(ref.current); }, 500);
+            });
+
+        // Add ResizeObserver to respond dynamically to container width/height changes
+        if (window.ResizeObserver) {
+            resizeObserver = new ResizeObserver(() => {
+                if (ref.current) {
+                    window.requestAnimationFrame(() => {
+                        Plotly.Plots.resize(ref.current);
+                    });
+                }
+            });
+            resizeObserver.observe(ref.current);
+        }
+
+        const handleResize = () => {
+            if (ref.current) Plotly.Plots.resize(ref.current);
+        };
+        window.addEventListener('resize', handleResize);
 
         return () => {
+            if (resizeObserver && ref.current) {
+                resizeObserver.unobserve(ref.current);
+            }
+            window.removeEventListener('resize', handleResize);
             if (ref.current) Plotly.purge(ref.current);
         };
     }, []);

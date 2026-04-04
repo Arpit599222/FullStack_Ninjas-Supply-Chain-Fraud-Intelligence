@@ -2,58 +2,69 @@ import React from 'react';
 import { FaLinkedin } from 'react-icons/fa';
 
 const TEAM_MEMBERS = [
-    {
-        name: 'Richa Grover',
-        linkedin: 'https://www.linkedin.com/in/richa-grover-960b3915/',
-    },
-    {
-        name: 'Arpit Raj',
-        linkedin: 'https://www.linkedin.com/in/arpitrajcse',
-    },
-    {
-        name: 'Paras Jain',
-        linkedin: 'https://www.linkedin.com/in/paras-jain-9b4a4023b/',
-    },
+    { name: 'Richa Grover',  linkedin: 'https://www.linkedin.com/in/richa-grover-960b3915/' },
+    { name: 'Arpit Raj',     linkedin: 'https://www.linkedin.com/in/arpitrajcse' },
+    { name: 'Paras Jain',    linkedin: 'https://www.linkedin.com/in/paras-jain-9b4a4023b/' },
 ];
 
 export default function Footer() {
     return (
-        <footer className="w-full border-t border-gray-800 mt-12 bg-[#0a0d14]">
-            <div className="max-w-[1600px] mx-auto px-6 py-8 flex flex-col items-center gap-5">
-
-                {/* Brand Logo and name */}
-                <div className="flex flex-col items-center gap-2 mb-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                        <img 
-                            src="/team_logo.jpg" 
-                            alt="Fullstack Ninjas Logo" 
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                    <p className="text-xl font-bold text-white mt-1">Fullstack Ninjas</p>
+        <footer style={{
+            marginTop: 64,
+            borderTop: '1px solid var(--border-subtle)',
+            padding: '48px 24px',
+            backgroundColor: 'var(--bg-deep)',
+        }}>
+            <div style={{
+                maxWidth: 1600, margin: '0 auto',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
+            }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                    <img 
+                        src="/team_logo.jpg" 
+                        alt="Fullstack Ninjas Logo" 
+                        style={{ 
+                            width: 56, 
+                            height: 56, 
+                            borderRadius: '50%', 
+                            objectFit: 'cover',
+                            border: '1px solid var(--border-subtle)',
+                            boxShadow: 'var(--shadow-soft)' 
+                        }} 
+                    />
+                    <p style={{
+                        margin: 0,
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: '0.9rem',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        letterSpacing: '0.05em',
+                    }}>
+                        FULLSTACK NINJAS
+                    </p>
                 </div>
 
-                {/* Team members */}
-                <div className="flex flex-wrap justify-center gap-6">
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 24 }}>
                     {TEAM_MEMBERS.map(({ name, linkedin }) => (
-                        <div key={name} className="flex items-center gap-2">
-                            <span className="text-sm text-gray-300 font-medium">{name}</span>
+                        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{name}</span>
                             <a
                                 href={linkedin.startsWith('http') ? linkedin : `https://${linkedin}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label={`${name} on LinkedIn`}
-                                className="text-gray-500 hover:text-blue-400 transition-all duration-200 hover:scale-125 inline-flex"
+                                style={{ color: 'var(--text-muted)', display: 'inline-flex', transition: 'color 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
                             >
-                                <FaLinkedin size={18} />
+                                <FaLinkedin size={16} />
                             </a>
                         </div>
                     ))}
                 </div>
 
-                {/* Copyright */}
-                <p className="text-xs text-gray-600">
-                    © 2026 Fullstack Ninjas · Supply Chain Fraud Intelligence
+                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    © {new Date().getFullYear()} Fullstack Ninjas. All rights reserved.
                 </p>
             </div>
         </footer>

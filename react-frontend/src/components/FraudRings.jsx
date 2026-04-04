@@ -10,7 +10,7 @@ function FraudNetworkPlot({ pos2, fraudSellers, edgeX2, edgeY2 }) {
     const data = [
         {
             x: edgeX2, y: edgeY2, mode: 'lines',
-            line: { width: 1.5, color: '#FF4444' }, hoverinfo: 'none', showlegend: false,
+            line: { width: 1.5, color: '#ef4444' }, hoverinfo: 'none', showlegend: false,
         },
         {
             x: fraudSellers.map(n => pos2[n.NODEID]?.[0]).filter(v => v != null),
@@ -19,11 +19,11 @@ function FraudNetworkPlot({ pos2, fraudSellers, edgeX2, edgeY2 }) {
             marker: {
                 size: 14,
                 color: fraudSellers.map(n => colors[n.LOUVAIN_COMMUNITY % 10]),
-                line: { width: 1, color: 'white' },
+                line: { width: 0 },
             },
             text: fraudSellers.map(n => n.SELLER_NAME.substring(0, 14)),
             textposition: 'top center',
-            textfont: { size: 7, color: 'white' },
+            textfont: { size: 10, color: '#a1a1aa' },
             hovertext: fraudSellers.map(n =>
                 `<b>${n.SELLER_NAME}</b><br>Platform: ${n.PLATFORM}<br>City: ${n.CITY}<br>Community: ${n.LOUVAIN_COMMUNITY}`
             ),
@@ -34,20 +34,31 @@ function FraudNetworkPlot({ pos2, fraudSellers, edgeX2, edgeY2 }) {
         dragmode: 'pan', height: 500, hovermode: 'closest',
         xaxis: { showgrid: false, zeroline: false, showticklabels: false },
         yaxis: { showgrid: false, zeroline: false, showticklabels: false },
-        paper_bgcolor: '#0d1117', plot_bgcolor: '#0d1117',
-        font: { color: 'white' }, showlegend: false,
+        paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+        font: { color: '#f4f4f5', family: 'Inter, system-ui, sans-serif' }, showlegend: false,
         margin: { l: 5, r: 5, t: 5, b: 5 },
+        hoverlabel: {
+            bgcolor: 'rgba(20,20,22,0.95)',
+            bordercolor: 'rgba(255,255,255,0.1)',
+            font: { family: "Inter, system-ui, sans-serif", color: '#f4f4f5', size: 12 },
+        },
     };
-    const { ref, loading } = usePlotly(data, layout, { scrollZoom: true, filename: 'fraud-rings' });
+    const { ref, loading } = usePlotly(data, layout, { scrollZoom: true, filename: 'fraud-rings', displayModeBar: false });
+    
     return (
-        <div>
-            {/* Controls row above chart — no absolute positioning */}
-            <div className="flex justify-end gap-2 mb-2">
-                <button onClick={() => resetChartView(ref)} className="px-3 py-1.5 text-xs bg-[#1a1a2e] border border-gray-600 text-gray-300 rounded hover:bg-[#2a2a4e] transition-colors" title="Reset View">⟳ Reset View</button>
-                <button onClick={() => downloadChartAsPNG(ref, 'fraud-rings')} className="px-3 py-1.5 text-xs bg-[#1a1a2e] border border-gray-600 text-gray-300 rounded hover:bg-[#2a2a4e] transition-colors" title="Download PNG">⬇ Download PNG</button>
+        <div className="glass-card" style={{ padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 12 }}>
+                <button onClick={() => resetChartView(ref)} 
+                    style={{ padding: '6px 12px', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', borderRadius: 4, cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                >⟳ Reset View</button>
+                <button onClick={() => downloadChartAsPNG(ref, 'fraud-rings')} 
+                    style={{ padding: '6px 12px', fontSize: '0.75rem', background: 'transparent', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', borderRadius: 4, cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+                >⬇ Download PNG</button>
             </div>
-            <div className="relative" style={{ height: '500px' }}>
-                {loading && <div className="absolute inset-0 bg-[#0d1117] flex items-center justify-center"><ChartLoader /></div>}
+            <div style={{ position: 'relative', height: '500px' }}>
+                {loading && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChartLoader /></div>}
                 <div ref={ref} style={{ width: '100%', height: '100%' }} />
             </div>
         </div>
@@ -88,43 +99,72 @@ export default function FraudRings() {
 
     return (
         <div>
-            <h2 className="text-xl font-bold mb-1">Fraud Ring Network — WCC Entity Resolution</h2>
-            <p className="text-sm text-gray-400 mb-4">Sellers sharing the same bank account — each cluster = one real entity &nbsp;·&nbsp;<span className="text-blue-400">Scroll to zoom · Drag to pan</span></p>
-            <div className="flex flex-col lg:flex-row gap-6">
-                <div className="flex-[3] bg-[#0d1117] rounded-lg border border-gray-800">
-                    <FraudNetworkPlot pos2={pos2} fraudSellers={fraudSellers} edgeX2={edgeX2} edgeY2={edgeY2} />
-                </div>
-                <div className="flex-[2]">
-                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <h3 className="font-bold">Duplicate Seller Groups</h3>
-                        <ExportButtons
-                            onCSV={() => downloadCSV(rings, 'fraud-rings')}
-                            onExcel={() => downloadExcel(rings, 'fraud-rings', 'Fraud Rings')}
-                            onPDF={() => downloadPDF(rings, 'fraud-rings', 'Fraud Ring Groups')}
-                        />
+            <div style={{ marginBottom: 24 }}>
+                <h2 style={{
+                    margin: '0 0 4px 0', fontSize: '1.25rem', fontWeight: 600,
+                    color: 'var(--text-primary)',
+                }}>
+                    Fraud Ring Network — Entity Resolution
+                </h2>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Sellers sharing identical hardware / banking details. Each cluster equals one true identity.
+                </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                {/* Visualizer takes full width here for better responsive behaviour, but we can do grid */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                    <div style={{ flex: '3 1 600px' }}>
+                        <FraudNetworkPlot pos2={pos2} fraudSellers={fraudSellers} edgeX2={edgeX2} edgeY2={edgeY2} />
                     </div>
-                    <div className="bg-yellow-900/30 border border-yellow-700/50 text-yellow-300 px-4 py-2 rounded-md mb-3 text-sm font-medium">
-                        ⚠ {rings.length} duplicate identity groups detected
-                    </div>
-                    <div className="overflow-auto h-[420px] bg-[#1a1a2e] border border-gray-800 rounded-lg">
-                        {rings.length === 0 ? <EmptyState message="No duplicate groups found." /> : (
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-[#242440] text-gray-300 sticky top-0">
-                                    <tr>
-                                        <th className="p-3">WCC Entity</th><th className="p-3">Accounts</th>
-                                        <th className="p-3">Fraud</th><th className="p-3">Names</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {rings.map((r, i) => (
-                                        <tr key={i} className="border-b border-gray-800 hover:bg-[#202035]">
-                                            <td className="p-3">{r.WCC_Entity}</td><td className="p-3">{r.Accounts}</td>
-                                            <td className="p-3">{r.Fraud_Count}</td><td className="p-3 text-gray-400 text-xs">{r.Names}</td>
+                    
+                    <div style={{ flex: '2 1 350px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 500, color: 'var(--text-primary)' }}>Duplicate Groups</h3>
+                            <ExportButtons
+                                onCSV={() => downloadCSV(rings, 'fraud-rings')}
+                                onExcel={() => downloadExcel(rings, 'fraud-rings', 'Fraud Rings')}
+                                onPDF={() => downloadPDF(rings, 'fraud-rings', 'Fraud Ring Groups')}
+                            />
+                        </div>
+                        
+                        <div style={{ 
+                            background: 'rgba(250, 204, 21, 0.1)', 
+                            border: '1px solid rgba(250, 204, 21, 0.2)', 
+                            color: '#facc15', 
+                            padding: '12px 16px', 
+                            borderRadius: 6, 
+                            marginBottom: 16, 
+                            fontSize: '0.8rem', 
+                            fontWeight: 500 
+                        }}>
+                            ⚠ {rings.length} duplicate identity groups detected
+                        </div>
+
+                        <div className="premium-table-container" style={{ maxHeight: 420 }}>
+                            {rings.length === 0 ? <EmptyState message="No duplicate groups found." /> : (
+                                <table className="premium-table">
+                                    <thead>
+                                        <tr>
+                                            <th>WCC Entity</th>
+                                            <th>Accounts</th>
+                                            <th>Fraud</th>
+                                            <th>Names</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        )}
+                                    </thead>
+                                    <tbody>
+                                        {rings.map((r, i) => (
+                                            <tr key={i}>
+                                                <td>{r.WCC_Entity}</td>
+                                                <td>{r.Accounts}</td>
+                                                <td>{r.Fraud_Count}</td>
+                                                <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{r.Names}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

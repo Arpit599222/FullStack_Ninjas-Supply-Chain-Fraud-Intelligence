@@ -43,9 +43,9 @@ function NetworkPlot({ pos, sellerNodes, whNodes, edgeX, edgeY }) {
         margin: { l: 10, r: 10, t: 10, b: 10 },
         xaxis: { showgrid: false, zeroline: false, showticklabels: false },
         yaxis: { showgrid: false, zeroline: false, showticklabels: false },
-        paper_bgcolor: '#0d1117', plot_bgcolor: '#0d1117',
-        font: { color: 'white' },
-        legend: { bgcolor: '#1a1a2e', bordercolor: '#444' },
+        paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+        font: { color: 'var(--text-primary)' },
+        legend: { bgcolor: 'var(--bg-card)', bordercolor: 'var(--border-subtle)', font: { color: 'var(--text-primary)' } },
     };
 
     const { ref, loading } = usePlotly(data, layout, {
@@ -60,18 +60,18 @@ function NetworkPlot({ pos, sellerNodes, whNodes, edgeX, edgeY }) {
             <div className="flex justify-end gap-2 mb-2">
                 <button
                     onClick={() => resetChartView(ref)}
-                    className="px-3 py-1.5 text-xs bg-[#1a1a2e] border border-gray-600 text-gray-300 rounded hover:bg-[#2a2a4e] transition-colors"
+                    className="px-3 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded hover:bg-[var(--bg-card-hover)] transition-colors"
                     title="Reset View"
                 >⟳ Reset View</button>
                 <button
                     onClick={() => downloadChartAsPNG(ref, 'supply-chain-network')}
-                    className="px-3 py-1.5 text-xs bg-[#1a1a2e] border border-gray-600 text-gray-300 rounded hover:bg-[#2a2a4e] transition-colors"
+                    className="px-3 py-1.5 text-xs bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded hover:bg-[var(--bg-card-hover)] transition-colors"
                     title="Download as PNG"
                 >⬇ Download PNG</button>
             </div>
             <div className="relative" style={{ height: '600px' }}>
                 {loading && (
-                    <div className="absolute inset-0 bg-[#0d1117] flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[var(--bg-deep)] flex items-center justify-center">
                         <ChartLoader />
                     </div>
                 )}
@@ -99,11 +99,11 @@ export default function NetworkGraph() {
     });
 
     return (
-        <div className="bg-[#0d1117] rounded-lg">
-            <h2 className="text-xl font-bold mb-1">Supply Chain Network — Seller → Warehouse</h2>
-            <p className="text-sm text-gray-400 mb-3">
+        <div className="bg-[var(--bg-card)] p-4 rounded-lg">
+            <h2 className="text-xl font-bold mb-1 text-[var(--text-primary)]">Supply Chain Network — Seller → Warehouse</h2>
+            <p className="text-sm text-[var(--text-secondary)] mb-3">
                 Node size = PageRank | Color = Risk level | Diamond = Warehouse
-                &nbsp;·&nbsp;<span className="text-blue-400">Scroll to zoom · Drag to pan</span>
+                &nbsp;·&nbsp;<span className="text-blue-500">Scroll to zoom · Drag to pan</span>
             </p>
             <NetworkPlot
                 pos={pos}

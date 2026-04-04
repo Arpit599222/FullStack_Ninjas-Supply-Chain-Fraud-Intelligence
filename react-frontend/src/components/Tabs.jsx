@@ -2,22 +2,38 @@ import React from 'react';
 
 export default function Tabs({ tabs, activeTab, setActiveTab }) {
     return (
-        <div className="flex space-x-1 border-b border-gray-800">
+        <div style={{
+            display: 'flex',
+            gap: 24,
+            borderBottom: '1px solid var(--border-subtle)',
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+        }}>
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.name;
                 return (
                     <button
                         key={tab.name}
                         onClick={() => setActiveTab(tab.name)}
-                        className={`
-                            flex items-center px-6 py-3 font-medium text-sm transition-colors duration-150
-                            ${isActive 
-                                ? 'border-b-2 border-blue-500 text-blue-400 bg-[#1a1a2e]' 
-                                : 'text-gray-400 hover:text-gray-200 hover:bg-[#151525]'
-                            }
-                        `}
+                        style={{
+                            padding: '12px 0',
+                            fontSize: '0.85rem',
+                            fontWeight: isActive ? 500 : 400,
+                            color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                            background: 'transparent',
+                            borderBottom: isActive ? '1px solid var(--text-primary)' : '1px solid transparent',
+                            cursor: 'pointer',
+                            transition: 'color 0.2s ease, border-color 0.2s ease',
+                            whiteSpace: 'nowrap',
+                            letterSpacing: '0.02em',
+                        }}
+                        onMouseEnter={e => {
+                            if (!isActive) e.currentTarget.style.color = 'var(--text-primary)';
+                        }}
+                        onMouseLeave={e => {
+                            if (!isActive) e.currentTarget.style.color = 'var(--text-secondary)';
+                        }}
                     >
-                        <span className="mr-2">{tab.icon}</span>
                         {tab.name}
                     </button>
                 );
