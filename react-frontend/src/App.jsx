@@ -6,8 +6,8 @@ import FraudRings from './components/FraudRings';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import PageRankGraph from './components/PageRankGraph';
 import RiskTable from './components/RiskTable';
-import GlobalAiChat from './components/GlobalAiChat';
 import Footer from './components/Footer';
+
 
 function App() {
   const [activeTab, setActiveTab] = useState('Network Graph');
@@ -56,8 +56,6 @@ function App() {
         </div>
       </div>
       <Footer />
-      {/* Floating AI chatbot — always visible */}
-      <GlobalAiChat />
     </div>
   );
 }

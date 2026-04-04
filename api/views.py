@@ -34,7 +34,7 @@ Connected Nodes: {connected_nodes}
 Respond in a conversational tone, clearly explaining the fraud risk level (High/Medium/Low) and the reason."""
 
             api_key = getattr(settings, 'GEMINI_API_KEY', '')
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
             
             payload = {
                 "contents": [
@@ -46,7 +46,7 @@ Respond in a conversational tone, clearly explaining the fraud risk level (High/
                 ]
             }
             
-            response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=15)
+            response = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=30)
             response.raise_for_status()
             
             res_json = response.json()

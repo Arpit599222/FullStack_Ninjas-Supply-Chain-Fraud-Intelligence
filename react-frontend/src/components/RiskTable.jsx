@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { ExportButtons, EmptyState, Pagination } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
-import AiExplainerModal from './AiExplainerModal';
 import { risk_df } from '../utils/mockData';
+
 
 const PAGE_SIZES = [25, 50, 100];
 
@@ -18,7 +18,6 @@ export default function RiskTable() {
     const [riskLevel, setRiskLevel] = useState('All');
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
-    const [selectedSeller, setSelectedSeller] = useState(null);  // AI modal target
 
     const filtered = useMemo(() => {
         return (risk_df || []).filter(r => {
@@ -51,14 +50,6 @@ export default function RiskTable() {
 
     return (
         <div>
-            {/* AI Explainer Modal */}
-            {selectedSeller && (
-                <AiExplainerModal
-                    seller={selectedSeller}
-                    onClose={() => setSelectedSeller(null)}
-                />
-            )}
-
             <h2 className="text-xl font-bold mb-4">Complete Seller Risk Table</h2>
 
             {/* Filters + Export */}
@@ -115,7 +106,6 @@ export default function RiskTable() {
                                     <th className="p-3">WCC Entity</th>
                                     <th className="p-3">Return Rate</th>
                                     <th className="p-3">Fraud Flag</th>
-                                    <th className="p-3">AI</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -131,13 +121,6 @@ export default function RiskTable() {
                                         <td className="p-3">{r.WCC_ENTITY}</td>
                                         <td className="p-3">{r.RETURN_RATE.toFixed(4)}</td>
                                         <td className="p-3">{r.FRAUD_FLAG === 1 ? '🔴 Yes' : '🟢 No'}</td>
-                                        <td className="p-2">
-                                            <button
-                                                onClick={() => setSelectedSeller(r)}
-                                                className="px-2 py-1 text-xs bg-blue-900/60 hover:bg-blue-700 border border-blue-700/50 text-blue-300 rounded-lg transition-colors whitespace-nowrap"
-                                                title="Explain risk using Gemini AI"
-                                            >🤖 Explain</button>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
