@@ -53,7 +53,7 @@ This platform provides a high-fidelity dashboard for identifying organized selle
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- Google AI Studio API Key ([Get one here](https://aistudio.google.com/))
+
 
 ### 1. Backend Setup
 ```bash
