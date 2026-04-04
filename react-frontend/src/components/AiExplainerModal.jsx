@@ -85,7 +85,8 @@ export default function AiExplainerModal({ seller, onClose }) {
             const resData = await response.json();
             setExplanation(resData.reply);
         } catch (err) {
-            setError(`AI analysis failed: ${err.message || 'Unknown error. Please try again.'}`);
+            console.error("API Error:", err);
+            setError(err.message || 'Error explaining risk');
         } finally {
             setLoading(false);
         }
@@ -102,7 +103,8 @@ export default function AiExplainerModal({ seller, onClose }) {
         setChatLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8000/api/chatbot/', {
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+            const response = await fetch(`${baseUrl}/api/chatbot/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -127,10 +129,11 @@ export default function AiExplainerModal({ seller, onClose }) {
             ];
             setChatMessages(prev => [...prev, { role: 'model', text: reply }]);
         } catch (err) {
+            console.error("Chat Error:", err);
             setChatMessages(prev => [...prev, {
                 role: 'model',
-                text: `⚠ Error: Backend communication failed.`,
-                isError: true,
+                text: 'Sorry, I am unable to connect to the server. Please check your connection or try again later.',
+                isError: true
             }]);
         } finally {
             setChatLoading(false);

@@ -83,7 +83,12 @@ export default function GlobalAiChat() {
             ];
             setMessages(prev => [...prev, { role: 'model', text: reply }]);
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'model', text: `⚠ Error: Backend communication failed.`, isError: true }]);
+            console.error("Chat Error:", err);
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: 'Sorry, I am unable to connect to the server. Please check your connection or try again later.',
+                isError: true
+            }]);
         } finally {
             setLoading(false);
         }

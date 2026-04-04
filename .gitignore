@@ -1,6 +1,42 @@
-# Byte-compiled / optimized / DLL files
+# ============================================================
+# PROJECT-SPECIFIC: Supply Chain Fraud Detection
+# ============================================================
+
+# Environment / Secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# React frontend
+react-frontend/node_modules/
+react-frontend/dist/
+react-frontend/.env
+react-frontend/.env.*
+!react-frontend/.env.example
+
+# Python venv
+venv/
+.venv/
+
+# Python cache — never commit these
 __pycache__/
-*.py[codz]
+*.py[cod]
+*.pyo
+
+# Django
+db.sqlite3
+*.sqlite3
+staticfiles/
+
+# Misc temp files
+*.old
+*.tmp
+
+# ============================================================
+# PYTHON / DJANGO (standard)
+# ============================================================
+
+
 *$py.class
 
 # C extensions
