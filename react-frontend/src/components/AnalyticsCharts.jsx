@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { usePlotly } from '../utils/usePlotly';
 import { ChartLoader, EmptyState } from './shared';
 import { risk_df as mock_risk_df } from '../utils/mockData';
 import { fetchRiskSummary } from '../utils/api';
 
 const DARK_BG   = 'transparent';
-const GRID_CLR  = 'var(--border-subtle)';
-const TEXT_CLR  = 'var(--text-secondary)';
+const GRID_CLR  = 'rgba(255,255,255,0.08)';
+const TEXT_CLR  = 'rgba(255,255,255,0.6)';
 const FONT_FAM  = "Inter, system-ui, sans-serif";
 
 const cmap = { HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981' };
@@ -15,211 +15,143 @@ const DARK_LAYOUT = {
     paper_bgcolor: DARK_BG,
     plot_bgcolor:  DARK_BG,
     font:          { family: FONT_FAM, color: TEXT_CLR, size: 11 },
-    xaxis: {
-        gridcolor: GRID_CLR, zerolinecolor: 'transparent',
-        tickfont: { color: TEXT_CLR },
-    },
-    yaxis: {
-        gridcolor: GRID_CLR, zerolinecolor: 'transparent',
-        tickfont: { color: TEXT_CLR },
-    },
-    legend: {
-        orientation: 'h', y: -0.2,
-        bgcolor: 'transparent',
-        font: { color: TEXT_CLR, size: 11 },
-    },
-    margin: { t: 20, l: 40, r: 20, b: 50 },
-    hoverlabel: {
-        bgcolor: 'var(--bg-card)',
-        bordercolor: 'var(--border-subtle)',
-        font: { family: FONT_FAM, color: 'var(--text-primary)', size: 12 },
-    },
+    xaxis: { gridcolor: GRID_CLR, zeroline: false },
+    yaxis: { gridcolor: GRID_CLR, zeroline: false },
+    legend: { orientation: 'h', y: -0.2, bgcolor: 'transparent' },
+    margin: { t: 30, l: 40, r: 20, b: 50 },
 };
 
-function PlotCard({ title, data, layout, filename, height = 300 }) {
-    const { ref, loading } = usePlotly(
-        data,
-        { ...DARK_LAYOUT, height, ...layout },
-        { filename, scrollZoom: false, displayModeBar: false }
-    );
+function PlotCard({ title, data, layout, height = 300 }) {
+    const { ref, loading } = usePlotly(data, { ...DARK_LAYOUT, height, ...layout });
     return (
-        <div className="glass-card" style={{ padding: '20px' }}>
-            <h3 style={{
-                margin: '0 0 16px 0', fontSize: '0.8rem', fontWeight: 500,
-                color: 'var(--text-primary)', letterSpacing: '0.02em',
-            }}>
-                {title}
-            </h3>
-
-            <div style={{ position: 'relative', height: `${height}px` }}>
-                {loading && (
-                    <div style={{
-                        position: 'absolute', inset: 0, display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                    }}>
-                        <ChartLoader />
-                    </div>
-                )}
-                <div ref={ref} style={{ width: '100%', height: '100%' }} />
+        <div className="glass-card p-5">
+            <h3 className="text-[0.8rem] font-medium text-[var(--text-primary)] mb-4">{title}</h3>
+            <div className="relative" style={{ height: `${height}px` }}>
+                {loading && <div className="absolute inset-0 flex items-center justify-center"><ChartLoader /></div>}
+                <div ref={ref} className="w-full h-full" />
             </div>
         </div>
     );
 }
 
 export default function AnalyticsCharts({ isLive }) {
-    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [riskData, setRiskData] = useState(mock_risk_df || []);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!isLive) {
-            setRiskData(mock_risk_df);
+            setRiskData(mock_risk_df || []);
             setLoading(false);
             return;
         }
-
-        const loadData = async () => {
+        const load = async () => {
             setLoading(true);
-            const data = await fetchRiskSummary();
-            if (data && data.length > 0) {
-                setRiskData(data);
-            }
+            const d = await fetchRiskSummary();
+            if (d && Array.isArray(d)) setRiskData(d);
             setLoading(false);
         };
-        loadData();
+        load();
     }, [isLive]);
 
-    if (loading) return <div className="grid grid-cols-1 md:grid-cols-3 gap-4"><ChartLoader /><ChartLoader /><ChartLoader /></div>;
-    if (!riskData || riskData.length === 0)
-        return <EmptyState message="No analytics data available." />;
+    const stats = useMemo(() => {
+        const platformGroups = {};
+        const cityGroups = {};
+        const communityGroups = {};
+        
+        (riskData || []).forEach(r => {
+            // Platform Stats
+            const p = r.PLATFORM || 'Unknown';
+            if (!platformGroups[p]) platformGroups[p] = { label: p, HIGH: 0, MEDIUM: 0, LOW: 0 };
+            platformGroups[p][r.RISK_LEVEL] = (platformGroups[p][r.RISK_LEVEL] || 0) + 1;
 
-    const getGroupedData = (key) => {
-        const groups = {};
-        riskData.forEach(r => {
-            const groupKey = r[key] || 'Unknown';
-            if (!groups[groupKey]) groups[groupKey] = { HIGH: 0, MEDIUM: 0, LOW: 0 };
-            groups[groupKey][r.RISK_LEVEL] = (groups[groupKey][r.RISK_LEVEL] || 0) + 1;
+            // City Stats
+            const c = r.CITY || 'Unknown';
+            if (!cityGroups[c]) cityGroups[c] = { label: c, HIGH: 0, MEDIUM: 0, LOW: 0 };
+            cityGroups[c][r.RISK_LEVEL] = (cityGroups[c][r.RISK_LEVEL] || 0) + 1;
+
+            // Community Stats
+            const comm = r.LOUVAIN_COMMUNITY;
+            if (comm !== null && comm !== undefined) {
+                if (!communityGroups[comm]) communityGroups[comm] = { id: comm, sellers: 0, totalRisk: 0, highRisk: 0 };
+                communityGroups[comm].sellers++;
+                communityGroups[comm].totalRisk += (r.RISK_SCORE || 0);
+                if (r.RISK_LEVEL === 'HIGH') communityGroups[comm].highRisk++;
+            }
         });
-        return Object.keys(groups).map(k => ({ label: k, ...groups[k] }));
-    };
 
-    const platformData = getGroupedData('PLATFORM');
-    const cityData     = getGroupedData('CITY');
-
-    const communityMetrics = useMemo(() => {
-        const groups = {};
-        riskData.forEach(r => {
-            const commId = r.LOUVAIN_COMMUNITY;
-            if (commId === null || commId === undefined) return;
-            if (!groups[commId]) groups[commId] = { id: commId, sellers: 0, totalRisk: 0, highRisk: 0 };
-            groups[commId].sellers++;
-            groups[commId].totalRisk += r.RISK_SCORE || 0;
-            if (r.RISK_LEVEL === 'HIGH') groups[commId].highRisk++;
-        });
-        return Object.values(groups)
-            .map(g => ({ ...g, avgRisk: g.totalRisk / g.sellers }))
-            .sort((a, b) => b.avgRisk - a.avgRisk);
+        return {
+            platform: Object.values(platformGroups),
+            city: Object.values(cityGroups),
+            communities: Object.values(communityGroups)
+                .map(g => ({ ...g, avgRisk: g.sellers > 0 ? g.totalRisk / g.sellers : 0 }))
+                .sort((a, b) => b.avgRisk - a.avgRisk)
+        };
     }, [riskData]);
 
-    const barTrace = (data, level) => ({
-        x: data.map(d => d.label),
-        y: data.map(d => d[level]),
-        name: level,
-        type: 'bar',
-        marker: {
-            color: cmap[level],
-            line: { width: 0 },
-        },
-        hovertemplate: `<b>%{x}</b><br>${level}: %{y}<extra></extra>`,
-    });
+    if (loading) return <div className="p-8"><ChartLoader /></div>;
+    if (!riskData.length) return <EmptyState />;
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 16 }}>
-            <PlotCard
-                title="PageRank vs Risk Score"
-                filename="pagerank-vs-risk"
-                data={['HIGH', 'MEDIUM', 'LOW'].map(l => ({
-                    x: riskData.filter(d => d.RISK_LEVEL === l).map(d => d.PAGERANK_SCORE),
-                    y: riskData.filter(d => d.RISK_LEVEL === l).map(d => d.RISK_SCORE),
-                    mode: 'markers',
-                    name: l,
-                    marker: { color: cmap[l], size: 8 },
-                    text: riskData.filter(d => d.RISK_LEVEL === l).map(d => `${d.SELLER_NAME}<br>City: ${d.CITY}`),
-                    hovertemplate: '<b>%{text}</b><br>PageRank: %{x:.4f}<br>Risk Score: %{y:.1f}<extra></extra>'
-                }))}
-                layout={{ 
-                    xaxis: { title: 'PageRank Centrality' },
-                    yaxis: { title: 'Risk Score' }
-                }}
-            />
-            <PlotCard
-                title="Risk Distribution by Platform"
-                filename="risk-by-platform"
-                data={['HIGH', 'MEDIUM', 'LOW'].map(l => barTrace(platformData, l))}
-                layout={{ barmode: 'stack' }}
-            />
-            <PlotCard
-                title="Risk by City"
-                filename="risk-by-city"
-                data={['HIGH', 'MEDIUM', 'LOW'].map(l => barTrace(cityData, l))}
-                layout={{ barmode: 'stack' }}
-            />
-            <PlotCard
-                title="Overall Risk Distribution"
-                filename="risk-distribution"
-                data={[{
-                    values: ['HIGH', 'MEDIUM', 'LOW'].map(l => riskData.filter(d => d.RISK_LEVEL === l).length),
-                    labels: ['HIGH', 'MEDIUM', 'LOW'],
-                    type: 'pie',
-                    hole: 0.6,
-                    marker: {
-                        colors: [cmap.HIGH, cmap.MEDIUM, cmap.LOW],
-                        line: { color: 'var(--bg-card)', width: 2 },
-                    },
-                    textfont: { color: 'var(--text-primary)', size: 11 },
-                    hovertemplate: '<b>%{label}</b><br>Count: %{value}<br>%{percent}<extra></extra>',
-                }]}
-                layout={{ legend: { orientation: 'v', x: 0.8, y: 0.5 } }}
-            />
+        <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <PlotCard 
+                    title="Risk Distribution by Platform"
+                    data={['HIGH', 'MEDIUM', 'LOW'].map(lvl => ({
+                        x: stats.platform.map(d => d.label),
+                        y: stats.platform.map(d => d[lvl]),
+                        name: lvl, type: 'bar', marker: { color: cmap[lvl] }
+                    }))}
+                    layout={{ barmode: 'stack' }}
+                />
+                <PlotCard 
+                    title="Geographic Risk Concentration"
+                    data={['HIGH', 'MEDIUM', 'LOW'].map(lvl => ({
+                        x: stats.city.map(d => d.label),
+                        y: stats.city.map(d => d[lvl]),
+                        name: lvl, type: 'bar', marker: { color: cmap[lvl] }
+                    }))}
+                    layout={{ barmode: 'stack' }}
+                />
+            </div>
 
-            {/* Community Summary Table - Integrated directly here to match the Streamlit idea */}
-            <div className="glass-card md:col-span-3 p-5" style={{ minWidth: '100%' }}>
-                <h3 className="text-xs font-medium uppercase tracking-wider text-[var(--text-secondary)] mb-4">
-                    Community Risk Profile (Louvain Clusters)
+            <div className="glass-card p-6">
+                <h3 className="text-[0.8rem] font-medium text-[var(--text-primary)] mb-6 uppercase tracking-wider">
+                    Community Vulnerability Index
                 </h3>
-                <div className="premium-table-container max-h-[300px] overflow-y-auto">
-                    <table className="premium-table">
+                <div className="premium-table-container max-h-[400px] overflow-y-auto w-full">
+                    <table className="premium-table w-full">
                         <thead>
                             <tr>
-                                <th>Community ID</th>
-                                <th>Sellers Count</th>
-                                <th>Avg. Risk Score</th>
-                                <th>High-Risk Sellers</th>
-                                <th>Risk Trend</th>
+                                <th>Cluster ID</th>
+                                <th>Population</th>
+                                <th>Avg Risk</th>
+                                <th>Critical Nodes</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {communityMetrics.map((c) => (
+                            {stats.communities.map(c => (
                                 <tr key={c.id}>
-                                    <td className="font-bold text-[var(--text-primary)]"># {c.id}</td>
-                                    <td className="text-[var(--text-secondary)]">{c.sellers}</td>
+                                    <td className="font-mono"># {c.id}</td>
+                                    <td>{c.sellers} sellers</td>
                                     <td>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-16 h-1.5 bg-[var(--bg-deep)] rounded-full overflow-hidden">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                                                 <div 
                                                     className="h-full bg-red-500" 
-                                                    style={{ width: `${Math.min(100, (c.avgRisk / 100) * 100)}%` }} 
+                                                    style={{ width: `${Math.min(100, c.avgRisk)}%` }} 
                                                 />
                                             </div>
-                                            <span className="text-xs font-semibold">{c.avgRisk.toFixed(1)}</span>
+                                            <span className="text-xs">{c.avgRisk.toFixed(1)}</span>
                                         </div>
                                     </td>
                                     <td>
                                         <span className={`px-2 py-0.5 rounded text-[0.65rem] font-bold ${c.highRisk > 0 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                                            {c.highRisk} High Risk
+                                            {c.highRisk} High
                                         </span>
                                     </td>
-                                    <td className="text-[var(--text-muted)] text-[0.65rem] italic">
-                                        {c.avgRisk > 60 ? 'CRITICAL CLUSTER' : 'ACTIVE'}
+                                    <td className="text-xs text-[var(--text-muted)] italic">
+                                        {c.avgRisk > 60 ? 'Immediate Action' : 'Monitoring'}
                                     </td>
                                 </tr>
                             ))}
