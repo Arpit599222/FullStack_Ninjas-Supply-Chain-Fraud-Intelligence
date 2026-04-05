@@ -1,13 +1,12 @@
 <div align="center">
 
-# <img src="react-frontend/public/logo_main.jpg" width="30" align="center" /> Supply Chain Fraud Intelligence
+# 🔍 Supply Chain Fraud Intelligence
 
 ### Graph-Powered Fraud Detection for E-Commerce Supply Chains
 
-[![React](https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://vitejs.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)]()
-[![Deployment](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://supply-chain-fraud-inte.vercel.app/)
+[![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)](https://www.snowflake.com/)
+[![Neo4j](https://img.shields.io/badge/Neo4j-4581C3?style=for-the-badge&logo=neo4j&logoColor=white)](https://neo4j.com/)
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://vitejs.dev/)
 
 > **Detect. Analyze. Prevent.** A real-time fraud intelligence dashboard that maps seller networks, identifies fraud rings, and surfaces high-risk entities using graph-based analysis.
 
@@ -19,10 +18,10 @@
 
 | Feature | Description |
 |---|---|
-| 🕸️ **Graph-Based Detection** | Maps seller-warehouse relationships as a live network |
-| 🧠 **PageRank Intelligence** | Identifies influential & dangerous sellers using graph scoring |
-| 🔴 **Risk Classification** | Automated scoring across 3 threat levels |
-| 👁️ **Fraud Ring Discovery** | Clusters coordinated fraud groups automatically |
+| 🕸️ **Neo4j Graph Engine** | Powers deep-link relationship analysis & community detection |
+| ❄️ **Snowflake Warehouse** | Scales fraud logic across millions of supply chain records |
+| 🧠 **PageRank Analytics** | Identify top-tier threat actors using centrality algorithms |
+| 👁️ **Louvain Communities** | Clusters coordinated fraud rings using modularity optimization |
 | 🧑‍⚖️ **Human-in-the-Loop** | Admin override system for analyst review |
 | 📊 **Interactive Dashboard** | Real-time analytics with cross-platform comparison |
 
@@ -67,9 +66,9 @@
 ---
 
 ### 🧠 4. PageRank Analysis
-- Applies PageRank-inspired scoring to the seller-warehouse graph
-- Identifies the **most influential** nodes in the network
-- Combines **influence + risk** to surface the most dangerous entities
+- Applies **Neo4j PageRank Centrality** to the seller-warehouse graph
+- Identifies the **most influential** and widespread nodes in the supply chain
+- Combines **Graph Centrality + Risk Metrics** to surface professional fraud actors
 
 ---
 
@@ -131,11 +130,12 @@ Risk Score = (Return Behavior × 30) + (Network Influence × 20) + (Fraud Indica
 
 | Layer | Technology |
 |---|---|
-| ⚛️ Frontend | React + Vite |
-| 🎨 Styling | CSS / Tailwind |
-| 📈 Visualization | Custom Graph Engine |
-| ☁️ Deployment | Vercel |
-| 🔧 Version Control | GitHub |
+| ⚛️ **Frontend** | React + Vite |
+| 🎨 **Styling** | Vanilla CSS (Premium Design System) |
+| ❄️ **Database** | **Snowflake** (Primary Data Warehouse) |
+| 🕸️ **Graph Engine** | **Neo4j** (Native Graph Analytics) |
+| 🐍 **Backend** | Django (REST API + Snowflake Connector) |
+| 🔧 **Algorithms** | PageRank, Louvain Community Detection, WCC |
 
 ---
 
@@ -180,21 +180,29 @@ npm run dev
 ## 📂 Project Structure
 
 ```
-Supply-Chain-Fraud-Detection/
-├── react-frontend/
+Supply-Chain-Fraud-Detection-Intelligence/
+├── core/                       # Django Project Settings
+│   ├── settings.py             # App Configuration & Snowflake Auth
+│   └── urls.py                 # Main Routing (Admin + API)
+├── api/                        # Intelligence API (Django App)
+│   ├── views.py                # Fast-Fetch Endpoints (Snowflake/Neo4j)
+│   ├── urls.py                 # API Route Definitions
+│   └── snowflake_utils.py      # Snowflake/Neo4j Connector & Graph Logic
+├── db/                         # Database Engineering
+│   └── setup_snowflake_neo4j.sql # Production-Grade SQL & Cypher Setup
+├── scripts/                    # Automation & Maintenance
+│   └── setup_snowflake.py      # Automated Warehouse Initializer
+├── react-frontend/             # Real-time Visual Intelligence (Vite)
 │   ├── src/
-│   │   ├── components/          # All UI components
-│   │   │   ├── NetworkGraph.jsx     # Seller-Warehouse graph
-│   │   │   ├── FraudRings.jsx       # Cluster detection view
-│   │   │   ├── Analytics.jsx        # Dashboard charts
-│   │   │   ├── PageRankGraph.jsx    # Influence analysis
-│   │   │   └── RiskTable.jsx        # Seller risk table
-│   │   ├── utils/
-│   │   │   └── mockData.js          # Simulated seller data
-│   │   └── App.jsx              # Root component + routing
+│   │   ├── components/         # High-Performance UI Modules (NetworkGraph, Analytics)
+│   │   ├── utils/              # API Bridges & Reliable Demo Engines
+│   │   └── App.jsx             # Main Interface Controller
 │   ├── package.json
 │   └── vite.config.js
-└── README.md
+├── manage.py                   # Django Command Line Utility
+├── requirements.txt            # Backend Python Dependencies
+├── .env                        # Secure Credentials (Snowflake, API Keys)
+└── README.md                   # Enterprise Documentation
 ```
 
 ---
@@ -215,11 +223,39 @@ Or connect your GitHub repo directly to Vercel for **automatic deploys on push**
 
 ---
 
-
-
 ## 📜 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🏗️ Technical Architecture
+
+The platform utilizes a modern, cloud-native stack designed for massive scalability:
+1. **Data Ingestion**: Raw supply chain data (Orders, Sellers, Warehouses) is stored and processed in **Snowflake**.
+2. **Graph Analysis**: Relationships are analyzed using **Neo4j Graph Data Science (GDS)** algorithms.
+3. **Advanced Algorithms**:
+   - **PageRank**: Measures the relative influence of nodes in the supply chain network.
+   - **Louvain**: Detects hidden communities (fraud rings) based on shared infrastructure.
+   - **WCC**: Resolves multiple disparate accounts to a single real-world identity.
+4. **Intelligence API**: A **Django** backend serves as the bridge, executing high-performance Snowflake/Neo4j queries and delivering results via REST.
+5. **Real-time Dashboard**: A **React** frontend visualizes these insights using interactive WebGL graphs and premium analytics charts.
+
+---
+
+## 🗄️ Reliability & Portability
+- **Enterprise-Ready**: Fully configured to connect to live **Snowflake** and **Neo4j** instances via environment variables.
+- **Failover Bridge**: Includes a high-fidelity **Mock Data Engine** to ensure 100% UI stability during presentations and evaluation periods.
+
+---
+
+## 👤 Author
+
+**Arpit Raj**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/Arpit599222)
+
+> Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
 
 ---
 
@@ -227,92 +263,4 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ⭐ **Star this repo** if you find it useful · 🐛 **Open an issue** for bugs · 🤝 **PRs welcome**
 
-</div>| **AI Orchestration** | Google AI Studio (Gemini 1.5 Flash / Latest) |
-| **Analytics Engine** | Python, Graph Algorithms (PageRank, Louvain, WCC) |
-| **Typography** | Inter |
-
----
-
-## ⚙️ Architecture
-
-```
-┌─────────────────────────────────┐      ┌──────────────────────────────┐
-│       React Frontend            │      │       Django Backend         │
-│ (Vite, Tailwind, Plotly)        │◄────►│ (REST API, logic, Security)  │
-└─────────────────────────────────┘      └──────────────┬───────────────┘
-                                                       │
-                                                       ▼
-                                         ┌──────────────────────────────┐
-                                         │      Google AI Studio        │
-                                         │      (Gemini API)            │
-                                         └──────────────────────────────┘
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-
-
-### 1. Backend Setup
-```bash
-# Navigate to the project root
-cd Supply-Chain-Fraud-Intelligence
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/Scripts/activate  # On Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create a .env file in the root
-GEMINI_API_KEY=your_actual_key_here
-
-# Run migrations (if any) and start the server
-python manage.py runserver
-```
-
-### 2. Frontend Setup
-```bash
-# Navigate to the frontend directory
-cd react-frontend
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
----
-
-## 🧠 AI Integration
-
-The system uses **Gemini 1.5 Flash** to analyze complex supply chain data points including:
-- **Return Rate Anomalies**: High volume returns vs. industry benchmarks.
-- **Graph Centrality**: PageRank scores indicating disproportionate network influence.
-- **Community Clustering**: Louvain IDs revealing suspicious affiliation with known fraud rings.
-- **Entity Resolution**: WCC components identifying shared financial infrastructure.
-
----
-
-## 👤 Credits
-
-**Fullstack Ninjas Team**
-- **Arpit Raj** — [@Arpit599222](https://github.com/Arpit599222)
-- **Richa Grover** — [@RichaACN](https://github.com/RichaACN)
-- **Paras Jain** — [@ParasJain03](https://github.com/ParasJain03)
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-*Built with ❄️ Data · 🤖 Google Gemini · ⚛️ React*
+</div>

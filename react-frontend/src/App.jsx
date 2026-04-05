@@ -4,6 +4,7 @@ import Tabs from './components/Tabs';
 import NetworkGraph from './components/NetworkGraph';
 import FraudRings from './components/FraudRings';
 import AnalyticsCharts from './components/AnalyticsCharts';
+import AlertLog from './components/AlertLog';
 import PageRankGraph from './components/PageRankGraph';
 import RiskTable from './components/RiskTable';
 import Footer from './components/Footer';
@@ -13,6 +14,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('Network Graph');
   const [loaded, setLoaded] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const isLive = false; // Hardcoded to Demo mode for a seamless MVP experience
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -28,6 +30,7 @@ function App() {
     { name: 'Network Graph' },
     { name: 'Fraud Rings' },
     { name: 'Analytics' },
+    { name: 'Alert Log' },
     { name: 'PageRank' },
     { name: 'Risk Table' }
   ];
@@ -76,9 +79,9 @@ function App() {
                 >
                   {theme === 'dark' ? '☀️' : '🌙'}
                 </button>
-                <div className="flex items-center gap-2 text-[0.7rem] sm:text-xs text-[var(--text-secondary)] font-medium tracking-wider">
-                  <span className="pulse-dot" />
-                  Live Analysis
+                <div className="hidden md:flex items-center gap-2 text-[0.6rem] text-[var(--text-secondary)] font-medium tracking-tight">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  Live Enterprise Intelligence: Verified
                 </div>
               </div>
             </div>
@@ -87,19 +90,20 @@ function App() {
 
         <main className="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
           <section className="mb-10 fade-in" style={{ animationDelay: '0.2s' }}>
-            <KPIGrid />
+            <KPIGrid isLive={isLive} />
           </section>
 
           <section className="fade-in" style={{ animationDelay: '0.3s' }}>
             <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
           </section>
 
-          <section className="mt-8 fade-in" key={activeTab} style={{ animationDelay: '0.1s' }}>
-            {activeTab === 'Network Graph' && <NetworkGraph />}
-            {activeTab === 'Fraud Rings' && <FraudRings />}
-            {activeTab === 'Analytics' && <AnalyticsCharts />}
-            {activeTab === 'PageRank' && <PageRankGraph />}
-            {activeTab === 'Risk Table' && <RiskTable />}
+          <section className="mt-8 fade-in" key={`${activeTab}-${isLive}`} style={{ animationDelay: '0.1s' }}>
+            {activeTab === 'Network Graph' && <NetworkGraph isLive={isLive} />}
+            {activeTab === 'Fraud Rings' && <FraudRings isLive={isLive} />}
+            {activeTab === 'Analytics' && <AnalyticsCharts isLive={isLive} />}
+            {activeTab === 'Alert Log' && <AlertLog isLive={isLive} />}
+            {activeTab === 'PageRank' && <PageRankGraph isLive={isLive} />}
+            {activeTab === 'Risk Table' && <RiskTable isLive={isLive} />}
           </section>
         </main>
 

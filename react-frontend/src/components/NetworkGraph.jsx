@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { usePlotly, downloadChartAsPNG, resetChartView } from '../utils/usePlotly';
 import { ChartLoader, EmptyState } from './shared';
-import { risk_df, wh_df, edges_df } from '../utils/mockData';
+import { risk_df as mock_risk_df, wh_df as mock_wh_df, edges_df as mock_edges_df } from '../utils/mockData';
+import { fetchRiskSummary, fetchNetworkGraph, fetchWarehouses } from '../utils/api';
 
 function NetworkPlot({ pos, sellerNodes, whNodes, edgeX, edgeY }) {
     const cmap = { HIGH: '#FF4444', MEDIUM: '#FFA500', LOW: '#44BB44' };
@@ -17,13 +18,16 @@ function NetworkPlot({ pos, sellerNodes, whNodes, edgeX, edgeY }) {
             y: sellerNodes.map(n => pos[n.NODEID]?.[1]).filter(v => v != null),
             mode: 'markers', name: 'Sellers',
             marker: {
-                size: sellerNodes.map(n => Math.max(7, n.PAGERANK_SCORE * 100 + 7)),
+                size: sellerNodes.map(n => Math.max(7, (n.PAGERANK_SCORE || 0) * 100 + 7)),
                 color: sellerNodes.map(n => cmap[n.RISK_LEVEL] || '#44BB44'),
                 line: { width: 0.5, color: 'white' },
             },
             text: sellerNodes.map(n =>
-                `<b>${n.SELLER_NAME}</b><br>City: ${n.CITY}<br>Platform: ${n.PLATFORM}<br>` +
-                `Risk: ${n.RISK_LEVEL} | Score: ${n.RISK_SCORE.toFixed(1)}<br>PageRank: ${n.PAGERANK_SCORE.toFixed(4)}`
+                `<b>${n.SELLER_NAME}</b><br>` +
+                `City: ${n.CITY} | Platform: ${n.PLATFORM}<br>` +
+                `Risk: ${n.RISK_LEVEL} (${(n.RISK_SCORE || 0).toFixed(1)})<br>` +
+                `PageRank: ${(n.PAGERANK_SCORE || 0).toFixed(4)}<br>` +
+                `Community: ${n.LOUVAIN_COMMUNITY || 'N/A'}`
             ),
             hoverinfo: 'text',
         },
@@ -81,22 +85,52 @@ function NetworkPlot({ pos, sellerNodes, whNodes, edgeX, edgeY }) {
     );
 }
 
-export default function NetworkGraph() {
-    if (!risk_df || risk_df.length === 0) return <EmptyState message="No seller data available." />;
+export default function NetworkGraph({ isLive }) {
+    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [whData, setWhData] = useState(mock_wh_df);
+    const [edgeData, setEdgeData] = useState(mock_edges_df);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isLive) {
+            setRiskData(mock_risk_df);
+            setWhData(mock_wh_df);
+            setEdgeData(mock_edges_df);
+            setLoading(false);
+            return;
+        }
+
+        const loadGraphData = async () => {
+            setLoading(true);
+            const [rData, nData, wData] = await Promise.all([
+                fetchRiskSummary(), 
+                fetchNetworkGraph(),
+                fetchWarehouses()
+            ]);
+            if (rData && rData.length > 0) setRiskData(rData);
+            if (nData && nData.length > 0) setEdgeData(nData);
+            if (wData && wData.length > 0) setWhData(wData);
+            setLoading(false);
+        };
+        loadGraphData();
+    }, [isLive]);
 
     const pos = useMemo(() => {
         const p = {};
-        [...risk_df, ...wh_df].forEach(node => {
+        [...riskData, ...whData].forEach(node => {
             p[node.NODEID] = [Math.random() * 10 - 5, Math.random() * 10 - 5];
         });
         return p;
-    }, []);
+    }, [riskData, whData]);
 
     const edgeX = [], edgeY = [];
-    edges_df.forEach(e => {
+    edgeData.forEach(e => {
         const s = pos[e.SOURCENODEID], t = pos[e.TARGETNODEID];
         if (s && t) { edgeX.push(s[0], t[0], null); edgeY.push(s[1], t[1], null); }
     });
+
+    if (loading) return <div className="bg-[var(--bg-card)] p-8 rounded-lg flex items-center justify-center"><ChartLoader /></div>;
+    if (!riskData || riskData.length === 0) return <EmptyState message="No seller data available." />;
 
     return (
         <div className="bg-[var(--bg-card)] p-4 rounded-lg">
@@ -107,8 +141,8 @@ export default function NetworkGraph() {
             </p>
             <NetworkPlot
                 pos={pos}
-                sellerNodes={risk_df.slice(0, 80)}
-                whNodes={wh_df}
+                sellerNodes={riskData.slice(0, 80)}
+                whNodes={whData}
                 edgeX={edgeX}
                 edgeY={edgeY}
             />

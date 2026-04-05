@@ -1,5 +1,6 @@
-import React from 'react';
-import { risk_df, fraud_df } from '../utils/mockData';
+import React, { useState, useEffect } from 'react';
+import { risk_df as mock_risk_df, fraud_df as mock_fraud_df } from '../utils/mockData';
+import { fetchRiskSummary } from '../utils/api';
 
 const CARD_CONFIGS = [
     { key: 'totalSellers', title: 'Total Sellers', dotColor: '#a1a1aa' },
@@ -49,13 +50,34 @@ function MetricCard({ config, value, delay = 0 }) {
     );
 }
 
-export default function KPIGrid() {
-    const totalSellers    = risk_df.length;
-    const highRisk        = risk_df.filter(r => r.RISK_LEVEL === 'HIGH').length;
-    const mediumRisk      = risk_df.filter(r => r.RISK_LEVEL === 'MEDIUM').length;
-    const lowRisk         = risk_df.filter(r => r.RISK_LEVEL === 'LOW').length;
-    const confirmedFraud  = risk_df.filter(r => r.FRAUD_FLAG === 1).length;
-    const suspiciousPairs = fraud_df.length;
+export default function KPIGrid({ isLive }) {
+    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isLive) {
+            setRiskData(mock_risk_df);
+            setLoading(false);
+            return;
+        }
+
+        const loadData = async () => {
+            setLoading(true);
+            const data = await fetchRiskSummary();
+            if (data && data.length > 0) {
+                setRiskData(data);
+            }
+            setLoading(false);
+        };
+        loadData();
+    }, [isLive]);
+
+    const totalSellers    = riskData.length;
+    const highRisk        = riskData.filter(r => (r.RISK_LEVEL || '').toUpperCase() === 'HIGH').length;
+    const mediumRisk      = riskData.filter(r => (r.RISK_LEVEL || '').toUpperCase() === 'MEDIUM').length;
+    const lowRisk         = riskData.filter(r => (r.RISK_LEVEL || '').toUpperCase() === 'LOW').length;
+    const confirmedFraud  = riskData.filter(r => r.FRAUD_FLAG === 1).length;
+    const suspiciousPairs = mock_fraud_df.length;
 
     const values = { totalSellers, highRisk, mediumRisk, lowRisk, confirmedFraud, suspiciousPairs };
 

@@ -1,5 +1,4 @@
-// mockData.js
-// Simulating the Python Faker / Snowflake data with identical schemas
+// Simulating the Python Faker / Simulated Graph Data with identical schemas
 
 const platforms = ['Amazon', 'Flipkart'];
 const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai'];

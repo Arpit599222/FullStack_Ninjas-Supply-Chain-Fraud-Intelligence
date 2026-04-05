@@ -1,4 +1,4 @@
-﻿annotated-types==0.7.0
+annotated-types==0.7.0
 anyio==4.13.0
 asgiref==3.11.1
 certifi==2026.2.25
@@ -27,3 +27,4 @@ typing_extensions==4.15.0
 tzdata==2026.1
 urllib3==2.6.3
 whitenoise==6.12.0
+snowflake-connector-python==3.13.4

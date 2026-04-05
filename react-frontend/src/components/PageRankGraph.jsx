@@ -2,13 +2,15 @@ import React from 'react';
 import { usePlotly } from '../utils/usePlotly';
 import { ChartLoader, EmptyState, ExportButtons, RiskBadge } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
-import { risk_df } from '../utils/mockData';
+import { risk_df as mock_risk_df } from '../utils/mockData';
+import { fetchRiskSummary } from '../utils/api';
+import { useState, useEffect, useMemo } from 'react';
 
 const cmap = { HIGH: '#ef4444', MEDIUM: '#facc15', LOW: '#22c55e' };
 
-function ScatterPlot() {
+function ScatterPlot({ riskData }) {
     const data = ['HIGH', 'MEDIUM', 'LOW'].map(lvl => {
-        const filtered = risk_df.filter(r => r.RISK_LEVEL === lvl);
+        const filtered = riskData.filter(r => r.RISK_LEVEL === lvl);
         return {
             x: filtered.map(r => r.PAGERANK_SCORE),
             y: filtered.map(r => r.RISK_SCORE),
@@ -68,12 +70,33 @@ function ScatterPlot() {
     );
 }
 
-export default function PageRankGraph() {
-    if (!risk_df || risk_df.length === 0) return <EmptyState message="No data available." />;
+export default function PageRankGraph({ isLive }) {
+    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [loading, setLoading] = useState(true);
 
-    const topSellers = [...risk_df]
-        .sort((a, b) => b.PAGERANK_SCORE - a.PAGERANK_SCORE)
-        .slice(0, 10);
+    useEffect(() => {
+        if (!isLive) {
+            setRiskData(mock_risk_df);
+            setLoading(false);
+            return;
+        }
+
+        const loadData = async () => {
+            setLoading(true);
+            const data = await fetchRiskSummary();
+            if (data && data.length > 0) {
+                setRiskData(data);
+            }
+            setLoading(false);
+        };
+        loadData();
+    }, [isLive]);
+
+    const topSellers = useMemo(() => {
+        return [...riskData]
+            .sort((a, b) => b.PAGERANK_SCORE - a.PAGERANK_SCORE)
+            .slice(0, 10);
+    }, [riskData]);
 
     const exportData = topSellers.map(s => ({
         Seller_Name: s.SELLER_NAME,
@@ -98,7 +121,7 @@ export default function PageRankGraph() {
                 </p>
             </div>
             
-            <div style={{ marginBottom: 32 }}><ScatterPlot /></div>
+            <div style={{ marginBottom: 32 }}><ScatterPlot riskData={riskData} /></div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
                 <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 500, color: 'var(--text-primary)' }}>Top 10 Sellers by PageRank</h3>

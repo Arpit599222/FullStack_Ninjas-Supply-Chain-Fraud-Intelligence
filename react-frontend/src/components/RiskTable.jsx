@@ -1,25 +1,47 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ExportButtons, EmptyState, Pagination, RiskBadge, FraudFlag } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
-import { risk_df } from '../utils/mockData';
+import { risk_df as mock_risk_df } from '../utils/mockData';
+import { fetchRiskSummary } from '../utils/api';
 
-export default function RiskTable() {
+export default function RiskTable({ isLive }) {
     const [platform, setPlatform] = useState('All');
-    const [riskLevel, setRiskLevel] = useState('All');
+    const [selectedRisks, setSelectedRisks] = useState(['HIGH', 'MEDIUM', 'LOW']);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
     const [sortCol, setSortCol] = useState('RISK_SCORE');
     const [sortAsc, setSortAsc] = useState(false);
     const [showInvestigationModal, setShowInvestigationModal] = useState(false);
+    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isLive) {
+            setRiskData(mock_risk_df);
+            setLoading(false);
+            return;
+        }
+
+        const loadData = async () => {
+            setLoading(true);
+            const data = await fetchRiskSummary();
+            if (data && data.length > 0) {
+                setRiskData(data);
+            }
+            setLoading(false);
+        };
+        loadData();
+    }, [isLive]);
 
     const handleInvestigation = () => {
         setShowInvestigationModal(true);
     };
 
     const filtered = useMemo(() => {
-        let data = (risk_df || []).filter(r => {
+        let data = (riskData || []).filter(r => {
             if (platform !== 'All' && r.PLATFORM !== platform) return false;
-            if (riskLevel !== 'All' && r.RISK_LEVEL !== riskLevel) return false;
+            const level = (r.RISK_LEVEL || '').toUpperCase();
+            if (selectedRisks.length > 0 && !selectedRisks.includes(level)) return false;
             return true;
         });
         data = [...data].sort((a, b) => {
@@ -30,7 +52,7 @@ export default function RiskTable() {
                 : String(bv).localeCompare(String(av));
         });
         return data;
-    }, [platform, riskLevel, sortCol, sortAsc]);
+    }, [platform, selectedRisks, sortCol, sortAsc]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     const safePage = Math.min(page, totalPages);
@@ -38,7 +60,14 @@ export default function RiskTable() {
 
     const handlePageSize = (s) => { setPageSize(s); setPage(1); };
     const handlePlatform = (v) => { setPlatform(v); setPage(1); };
-    const handleRisk     = (v) => { setRiskLevel(v); setPage(1); };
+    const handleRiskToggle = (level) => {
+        setPage(1);
+        setSelectedRisks(prev => 
+            prev.includes(level) 
+                ? prev.filter(l => l !== level) 
+                : [...prev, level]
+        );
+    };
     const toggleSort     = (col) => { setSortCol(col); setSortAsc(p => sortCol === col ? !p : false); };
 
     const exportData = filtered.map(r => ({
@@ -46,11 +75,11 @@ export default function RiskTable() {
         Platform: r.PLATFORM,
         City: r.CITY,
         Risk_Level: r.RISK_LEVEL,
-        Risk_Score: parseFloat(r.RISK_SCORE.toFixed(2)),
-        PageRank_Score: parseFloat(r.PAGERANK_SCORE.toFixed(4)),
+        Risk_Score: r.RISK_SCORE ? parseFloat(r.RISK_SCORE.toFixed(2)) : 0,
+        PageRank_Score: r.PAGERANK_SCORE ? parseFloat(r.PAGERANK_SCORE.toFixed(4)) : 0,
         Community: r.LOUVAIN_COMMUNITY,
         WCC_Entity: r.WCC_ENTITY,
-        Return_Rate: parseFloat(r.RETURN_RATE.toFixed(4)),
+        Return_Rate: r.RETURN_RATE ? parseFloat(r.RETURN_RATE.toFixed(4)) : 0,
         Fraud_Flag: r.FRAUD_FLAG,
     }));
 
@@ -71,18 +100,33 @@ export default function RiskTable() {
         <div className="glass-card overflow-hidden">
             <div className="p-4 md:p-6 border-b border-[var(--border-subtle)]">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                        <select value={platform} onChange={e => handlePlatform(e.target.value)} className="premium-select w-full sm:w-48">
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <select value={platform} onChange={e => handlePlatform(e.target.value)} className="premium-select w-full sm:w-40">
                             <option value="All">All Platforms</option>
                             <option value="Amazon">Amazon</option>
                             <option value="Flipkart">Flipkart</option>
                         </select>
-                        <select value={riskLevel} onChange={e => handleRisk(e.target.value)} className="premium-select w-full sm:w-48">
-                            <option value="All">All Risks</option>
-                            <option value="HIGH">High</option>
-                            <option value="MEDIUM">Medium</option>
-                            <option value="LOW">Low</option>
-                        </select>
+                        
+                        <div className="flex items-center bg-[var(--bg-deep)] p-1 rounded-lg border border-[var(--border-subtle)]">
+                            {['HIGH', 'MEDIUM', 'LOW'].map(level => {
+                                const active = selectedRisks.includes(level);
+                                const clr = level === 'HIGH' ? '#ef4444' : level === 'MEDIUM' ? '#f59e0b' : '#10b981';
+                                return (
+                                    <button
+                                        key={level}
+                                        onClick={() => handleRiskToggle(level)}
+                                        className={`px-3 py-1.5 text-[0.65rem] font-bold rounded-md transition-all duration-200 uppercase tracking-tighter ${active ? 'opacity-100 shadow-lg' : 'opacity-30 grayscale hover:opacity-60'}`}
+                                        style={{ 
+                                            backgroundColor: active ? `${clr}22` : 'transparent',
+                                            color: active ? clr : 'var(--text-secondary)',
+                                            border: active ? `1px solid ${clr}44` : '1px solid transparent'
+                                        }}
+                                    >
+                                        {level}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                     <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                         <ExportButtons
@@ -127,21 +171,16 @@ export default function RiskTable() {
                                         <td style={{ fontWeight: 500 }}>
                                             <div className="flex flex-col gap-1 items-start">
                                                 <span>{r.SELLER_NAME}</span>
-                                                {r.ADMIN_REASON && (
-                                                    <span className="text-[10px] uppercase font-bold tracking-wider bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded shadow-sm border border-blue-500/20">
-                                                        MODIFIED BY ADMIN
-                                                    </span>
-                                                )}
                                             </div>
                                         </td>
                                         <td>{r.PLATFORM}</td>
                                         <td>{r.CITY}</td>
                                         <td><RiskBadge level={r.RISK_LEVEL} /></td>
-                                        <td>{r.RISK_SCORE.toFixed(2)}</td>
-                                        <td>{r.PAGERANK_SCORE.toFixed(4)}</td>
+                                        <td>{r.RISK_SCORE ? r.RISK_SCORE.toFixed(2) : '0.00'}</td>
+                                        <td>{r.PAGERANK_SCORE ? r.PAGERANK_SCORE.toFixed(4) : '0.0000'}</td>
                                         <td>{r.LOUVAIN_COMMUNITY}</td>
                                         <td>{r.WCC_ENTITY}</td>
-                                        <td>{r.RETURN_RATE.toFixed(4)}</td>
+                                        <td>{r.RETURN_RATE ? r.RETURN_RATE.toFixed(4) : '0.0000'}</td>
                                         <td>
                                             <FraudFlag isFraud={r.FRAUD_FLAG === 1} onInvestigate={handleInvestigation} />
                                         </td>

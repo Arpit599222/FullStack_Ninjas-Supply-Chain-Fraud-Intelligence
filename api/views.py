@@ -3,9 +3,11 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from .snowflake_utils import get_risk_summary, get_network_graph, get_fraud_alerts, get_warehouses
 
 @csrf_exempt
 def chatbot(request):
+    # ... (existing chatbot code)
     if request.method == "POST":
         try:
             body = json.loads(request.body)
@@ -62,10 +64,57 @@ Respond in a conversational tone, clearly explaining the fraud risk level (High/
             except:
                 fallback = f"Google AI API Error: {str(he)}"
             
-            print("GEMINI API ERROR:", fallback)
             return JsonResponse({"reply": fallback, "is_fallback": True})
         except Exception as e:
             fallback = f"Backend Error: {str(e)}"
             return JsonResponse({"reply": fallback, "is_fallback": True})
             
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def risk_summary_api(request):
+    """
+    API endpoint for the risk summary data.
+    """
+    if request.method == "GET":
+        data = get_risk_summary()
+        if data is None:
+            # If Snowflake fails or is not configured, return an empty list or mock data indicator
+            return JsonResponse({"error": "Snowflake configuration missing or connection failed", "data": []}, status=500)
+        return JsonResponse({"data": data}, safe=False)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def network_graph_api(request):
+    """
+    API endpoint for the network graph data.
+    """
+    if request.method == "GET":
+        data = get_network_graph()
+        if data is None:
+            return JsonResponse({"error": "Snowflake configuration missing or connection failed", "data": []}, status=500)
+        return JsonResponse({"data": data}, safe=False)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def alerts_api(request):
+    """
+    API endpoint for fraud alerts.
+    """
+    if request.method == "GET":
+        data = get_fraud_alerts()
+        if data is None:
+            return JsonResponse({"error": "Snowflake configuration missing or connection failed", "data": []}, status=500)
+        return JsonResponse({"data": data}, safe=False)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+@csrf_exempt
+def warehouses_api(request):
+    """
+    API endpoint for the warehouse data.
+    """
+    if request.method == "GET":
+        data = get_warehouses()
+        if data is None:
+            return JsonResponse({"error": "Snowflake connection failed", "data": []}, status=500)
+        return JsonResponse({"data": data}, safe=False)
     return JsonResponse({"error": "Method not allowed"}, status=405)

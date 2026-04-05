@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { usePlotly, downloadChartAsPNG, resetChartView } from '../utils/usePlotly';
 import { ChartLoader, EmptyState, ExportButtons } from './shared';
 import { downloadCSV, downloadExcel, downloadPDF } from '../utils/tableExport';
-import { risk_df, fraud_df } from '../utils/mockData';
+import { risk_df as mock_risk_df, fraud_df as mock_fraud_df } from '../utils/mockData';
+import { fetchRiskSummary } from '../utils/api';
 
 const colors = ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9','#bc80bd'];
 
@@ -65,35 +66,56 @@ function FraudNetworkPlot({ pos2, fraudSellers, edgeX2, edgeY2 }) {
     );
 }
 
-export default function FraudRings() {
-    const fraudSellers = risk_df.filter(r => r.FRAUD_FLAG === 1);
+export default function FraudRings({ isLive }) {
+    const [riskData, setRiskData] = useState(mock_risk_df);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!isLive) {
+            setRiskData(mock_risk_df);
+            setLoading(false);
+            return;
+        }
+
+        const loadData = async () => {
+            setLoading(true);
+            const data = await fetchRiskSummary();
+            if (data && data.length > 0) {
+                setRiskData(data);
+            }
+            setLoading(false);
+        };
+        loadData();
+    }, [isLive]);
+
+    const fraudSellers = useMemo(() => riskData.filter(r => r.FRAUD_FLAG === 1), [riskData]);
 
     const pos2 = useMemo(() => {
         const p = {};
         fraudSellers.forEach(n => { p[n.NODEID] = [Math.random() * 10 - 5, Math.random() * 10 - 5]; });
         return p;
-    }, []);
+    }, [fraudSellers]);
 
     const edgeX2 = [], edgeY2 = [];
-    fraud_df.forEach(e => {
+    mock_fraud_df.forEach(e => {
         const s = pos2[e.SOURCENODEID], t = pos2[e.TARGETNODEID];
         if (s && t) { edgeX2.push(s[0], t[0], null); edgeY2.push(s[1], t[1], null); }
     });
 
     const rings = useMemo(() => {
         const map = {};
-        risk_df.forEach(r => {
+        riskData.forEach(r => {
             if (!map[r.WCC_ENTITY]) map[r.WCC_ENTITY] = { accounts: 0, fraudCount: 0, avgReturn: 0, names: [], entity: r.WCC_ENTITY };
             map[r.WCC_ENTITY].accounts++;
-            map[r.WCC_ENTITY].fraudCount += r.FRAUD_FLAG;
-            map[r.WCC_ENTITY].avgReturn += r.RETURN_RATE;
+            map[r.WCC_ENTITY].fraudCount += r.FRAUD_FLAG || 0;
+            map[r.WCC_ENTITY].avgReturn += r.RETURN_RATE || 0;
             if (map[r.WCC_ENTITY].names.length < 3) map[r.WCC_ENTITY].names.push(r.SELLER_NAME);
         });
         return Object.values(map)
             .filter(r => r.accounts > 1)
             .map(r => ({ WCC_Entity: r.entity, Accounts: r.accounts, Fraud_Count: r.fraudCount, Avg_Return: parseFloat((r.avgReturn / r.accounts).toFixed(4)), Names: r.names.join(' | ') }))
             .sort((a, b) => b.Fraud_Count - a.Fraud_Count);
-    }, []);
+    }, [riskData]);
 
     if (fraudSellers.length === 0) return <EmptyState message="No fraud sellers detected." />;
 
