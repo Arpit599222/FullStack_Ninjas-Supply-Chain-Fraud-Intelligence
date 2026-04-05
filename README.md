@@ -1,13 +1,13 @@
 <div align="center">
 
-# 🔍 Supply Chain Fraud Intelligence
+# <img src="react-frontend/public/logo_main.jpg" width="30" align="center" /> Supply Chain Fraud Intelligence
 
 ### Graph-Powered Fraud Detection for E-Commerce Supply Chains
 
 [![React](https://img.shields.io/badge/React-Vite-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://vitejs.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)]()
-[![Deployment](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/)
+[![Deployment](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://supply-chain-fraud-inte.vercel.app/)
 
 > **Detect. Analyze. Prevent.** A real-time fraud intelligence dashboard that maps seller networks, identifies fraud rings, and surfaces high-risk entities using graph-based analysis.
 
