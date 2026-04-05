@@ -223,16 +223,6 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-## 👤 Author
-
-**Arpit Raj**
-
-[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/Arpit599222)
-
-> Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
-
----
-
 <div align="center">
 
 ⭐ **Star this repo** if you find it useful · 🐛 **Open an issue** for bugs · 🤝 **PRs welcome**
