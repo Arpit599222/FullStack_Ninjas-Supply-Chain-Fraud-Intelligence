@@ -35,7 +35,7 @@ export function usePlotly(data, layout, config = {}) {
 
         let resizeObserver;
 
-        Plotly.newPlot(ref.current, data, defaultLayout, defaultConfig)
+        Plotly.react(ref.current, data, defaultLayout, defaultConfig)
             .then(() => {
                 setLoading(false);
                 // Force a resize after small delays to guarantee it fits the container 
@@ -68,7 +68,7 @@ export function usePlotly(data, layout, config = {}) {
             window.removeEventListener('resize', handleResize);
             if (ref.current) Plotly.purge(ref.current);
         };
-    }, []);
+    }, [data, layout, config]);
 
     return { ref, loading };
 }
