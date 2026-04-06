@@ -251,9 +251,17 @@ The platform utilizes a modern, cloud-native stack designed for massive scalabil
 
 ## 👤 Author
 
+**Richa Grover**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/RichaACN)
+
 **Arpit Raj**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/Arpit599222)
+
+**Paras Jain**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/ParasJain03)
 
 > Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
 
