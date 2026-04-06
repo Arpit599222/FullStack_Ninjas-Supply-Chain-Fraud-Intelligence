@@ -253,7 +253,7 @@ The platform utilizes a modern, cloud-native stack designed for massive scalabil
 
 **Richa Grover**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/RichaACN)
+[![GitHub](https://img.shields.io/badge/GitHub-RichaACN-181717?style=flat-square&logo=github)](https://github.com/RichaACN)
 
 **Arpit Raj**
 
@@ -261,7 +261,7 @@ The platform utilizes a modern, cloud-native stack designed for massive scalabil
 
 **Paras Jain**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/ParasJain03)
+[![GitHub](https://img.shields.io/badge/GitHub-ParasJain03-181717?style=flat-square&logo=github)](https://github.com/ParasJain03)
 
 > Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
 
