@@ -4,7 +4,7 @@ import { FaLinkedin } from 'react-icons/fa';
 const TEAM_MEMBERS = [
     { name: 'Richa Grover',  linkedin: 'https://www.linkedin.com/in/richa-grover-960b3915/' },
     { name: 'Arpit Raj',     linkedin: 'https://www.linkedin.com/in/arpitrajcse' },
-    { name: 'Paras Jain',    linkedin: 'https://www.linkedin.com/in/paras-jain-9b4a4023b/' },
+   
 ];
 
 export default function Footer() {
