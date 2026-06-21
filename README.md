@@ -276,7 +276,7 @@ Or connect the GitHub repo directly to Vercel for automatic deploys on every pus
 |---|---|
 | Arpit Raj | [@Arpit599222](https://github.com/Arpit599222) |
 | Richa Grover | [@RichaACN](https://github.com/RichaACN) |
-| Paras Jain | [@ParasJain03](https://github.com/ParasJain03) |
+
 
 > Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
 
@@ -319,9 +319,7 @@ The platform utilizes a modern, cloud-native stack designed for massive scalabil
 
 [![GitHub](https://img.shields.io/badge/GitHub-Arpit599222-181717?style=flat-square&logo=github)](https://github.com/Arpit599222)
 
-**Paras Jain**
 
-[![GitHub](https://img.shields.io/badge/GitHub-ParasJain03-181717?style=flat-square&logo=github)](https://github.com/ParasJain03)
 
 > Built with 🔥 as part of the **Google Solution Challenge** — fighting fraud with graph intelligence.
 
